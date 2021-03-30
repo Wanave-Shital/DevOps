@@ -1,0 +1,138 @@
+(base) sheetal@sheetal-hp-laptop-15-da0xxx:~$ docker-compose ps
+    Name                  Command             State                 Ports              
+---------------------------------------------------------------------------------------
+sheetal_db_1    docker-entrypoint.sh mysqld   Up      0.0.0.0:3306->3306/tcp, 33060/tcp
+sheetal_web_1   docker-entrypoint.sh mysqld   Up      3306/tcp, 33060/tcp              
+(base) sheetal@sheetal-hp-laptop-15-da0xxx:~$ mysql -h 127.0.0.1 -P 3306 -u root -p123
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 9
+Server version: 8.0.23 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| pucsdStudents      |
+| sys                |
++--------------------+
+5 rows in set (0.08 sec)
+
+mysql> exit
+Bye
+(base) sheetal@sheetal-hp-laptop-15-da0xxx:~$ edit docker-compose.yml
+Unescaped left brace in regex is deprecated, passed through in regex; marked by <-- HERE in m/%{ <-- HERE (.*?)}/ at /usr/bin/edit line 528.
+(base) sheetal@sheetal-hp-laptop-15-da0xxx:~$ cat docker-compose.yml
+version: "2"
+services:
+    mysql-node-1:
+        container_name: mysql-node-1
+        restart: always
+        build: .
+        ports: 
+                ["3301:3306"]
+    
+    mysql-node-2:
+        container_name: mysql-node-2
+        restart: always
+        build: .
+        ports:
+                ["3302:3306"]
+
+    mysql-node-3:
+        container_name: mysql-node-3
+        restart: always
+        build: .
+        ports: 
+                ["3303:3306"]
+ 
+ //////////////////////////////////////////////////////////////////////
+                
+(base) sheetal@sheetal-hp-laptop-15-da0xxx:~$ docker run -it --net=cluster mysql/mysql-cluster ndb_mgm 
+[Entrypoint] MySQL Docker Image 8.0.23-1.1.19-cluster
+[Entrypoint] Starting ndb_mgm
+-- NDB Cluster -- Management Client --
+ndb_mgm> show
+Connected to Management Server at: 192.168.0.2:1186
+Cluster Configuration
+---------------------
+[ndbd(NDB)]	2 node(s)
+id=2	@192.168.0.3  (mysql-8.0.23 ndb-8.0.23, Nodegroup: 0, *)
+id=3	@192.168.0.4  (mysql-8.0.23 ndb-8.0.23, Nodegroup: 0)
+
+[ndb_mgmd(MGM)]	1 node(s)
+id=1	@192.168.0.2  (mysql-8.0.23 ndb-8.0.23)
+
+[mysqld(API)]	1 node(s)
+id=4	@192.168.0.10  (mysql-8.0.23 ndb-8.0.23)
+
+ndb_mgm> 
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+sheetal@sheetal-hp-laptop-15-da0xxx:~$ docker exec -it mysql1 mysql -uroot -p
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 36
+Server version: 8.0.23-cluster MySQL Cluster Community Server - GPL
+
+Copyright (c) 2000, 2021, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| ndbinfo            |
+| performance_schema |
+| pucsd              |
+| pucsdStudents      |
+| sys                |
++--------------------+
+7 rows in set (0.01 sec)
+
+mysql> use pucsdStudents;
+Database changed
+mysql> create table studentData(Roll_No int,Name Varchar(20),Address Varchar(20),Mobile_Number varchar(10),PAN_Number varchar(15));
+Query OK, 0 rows affected (4.37 sec)
+
+
+mysql> insert into studentData values(1,"sheetal","Baramati","345678743","456789gtAWF12");
+Query OK, 1 row affected (1.72 sec)
+
+mysql> insert into studentData values(2,"Meena","Baramati","345678743","456789gtAWF12");
+Query OK, 1 row affected (0.46 sec)
+
+mysql> select * from studentData;
++---------+---------+----------+---------------+---------------+
+| Roll_No | Name    | Address  | Mobile_Number | PAN_Number    |
++---------+---------+----------+---------------+---------------+
+|       1 | sheetal | Baramati | 345678743     | 456789gtAWF12 |
+|       2 | Meena   | Baramati | 345678743     | 456789gtAWF12 |
++---------+---------+----------+---------------+---------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+//////////////////////////////////////////////////////////////////
+
+
